@@ -1,6 +1,3 @@
-Файл с функциями для генерации email и пароля:
-
-```python
 import random
 import string
 
@@ -11,8 +8,7 @@ def generate_email(name="test", surname="testov", cohort="1999", domain="yandex.
     Пример: test_testov_1999_123@yandex.ru
     """
     random_digits = ''.join(random.choices(string.digits, k=3))
-    email = f"{name}_{surname}_{cohort}_{random_digits}@{domain}"
-    return email
+    return f"{name}_{surname}_{cohort}_{random_digits}@{domain}"
 
 def generate_password(length=8):
     """
@@ -21,3 +17,4 @@ def generate_password(length=8):
     """
     chars = string.ascii_letters + string.digits
     return ''.join(random.choices(chars, k=length))
+

@@ -1,6 +1,5 @@
-import time
-import pytest
-from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from locators import (
     ACCOUNT_LINK,
     CONSTRUCTOR_LINK,
@@ -9,37 +8,64 @@ from locators import (
     SAUCES_TAB,
     FILLINGS_TAB
 )
-from generators import generate_email, generate_password
 
 BASE_URL = "http://stellarburgers.com"  # Укажите актуальный URL
 
+class TestConstructor:
+    def test_transition_to_constructor_from_account(self, driver):
+        driver.get(BASE_URL)
+        wait = WebDriverWait(driver, 10)
 
-def test_transition_to_constructor_from_account(driver):
-    driver.get(BASE_URL)
+        # Ждем кликабельности элемента "Личный кабинет" и кликаем
+        wait.until(EC.element_to_be_clickable(ACCOUNT_LINK)).click()
 
-    driver.find_element(*ACCOUNT_LINK).click()
-    time.sleep(1)
+        # Ждем кликабельности элемента "Конструктор" и кликаем
+        wait.until(EC.element_to_be_clickable(CONSTRUCTOR_LINK)).click()
 
-    # Допустим, после входа переходим в личный кабинет (здесь можно вставить код входа, если требуется)
+        # Ждем появления вкладки "Булки" и проверяем активное состояние по атрибуту class
+        buns_tab = wait.until(EC.presence_of_element_located(BUNS_TAB))
+        buns_class = buns_tab.get_attribute("class")
+        assert "active" in buns_class, "Изначально активная вкладка не 'Булки'"
 
-    driver.find_element(*CONSTRUCTOR_LINK).click()
-    time.sleep(1)
+        # Ждем кликабельности логотипа и кликаем по нему
+        wait.until(EC.element_to_be_clickable(LOGO_LINK)).click()
 
-    buns_tab = driver.find_element(*BUNS_TAB)
-    assert buns_tab.is_displayed(), "Элемент 'Булки' не отображается после перехода в Конструктор"
+        # Ожидаем, что либо URL станет BASE_URL, либо состояние вкладки "Булки" останется активным
+        wait.until(EC.or_(EC.url_to_be(BASE_URL), EC.presence_of_element_located(BUNS_TAB)))
+        current_url = driver.current_url
+        buns_class_after = buns_tab.get_attribute("class")
+        assert current_url == BASE_URL or "active" in buns_class_after, \
+            "Переход по логотипу не осуществился корректно"
 
-    driver.find_element(*LOGO_LINK).click()
-    time.sleep(1)
-    assert driver.current_url == BASE_URL or driver.find_element(
-        *BUNS_TAB).is_displayed(), "Переход по логотипу не осуществился корректно"
+    def test_buns_tab_active(self, driver):
+        driver.get(BASE_URL)
+        wait = WebDriverWait(driver, 10)
+        # Переходим в раздел "Конструктор"
+        wait.until(EC.element_to_be_clickable(CONSTRUCTOR_LINK)).click()
 
+        # Проверка: по умолчанию активна вкладка "Булки"
+        buns_tab = wait.until(EC.presence_of_element_located(BUNS_TAB))
+        buns_class = buns_tab.get_attribute("class")
+        assert "active" in buns_class, "Изначально активная вкладка не 'Булки'"
 
-def test_constructor_sections(driver):
-    driver.get(BASE_URL)
+    def test_sauces_tab_active(self, driver):
+        driver.get(BASE_URL)
+        wait = WebDriverWait(driver, 10)
+        wait.until(EC.element_to_be_clickable(CONSTRUCTOR_LINK)).click()
 
-    driver.find_element(*CONSTRUCTOR_LINK).click()
-    time.sleep(1)
+        # Переходим на вкладку "Соусы"
+        sauces_tab = wait.until(EC.presence_of_element_located(SAUCES_TAB))
+        sauces_tab.click()
+        sauces_class = sauces_tab.get_attribute("class")
+        assert "active" in sauces_class, "Вкладка 'Соусы' не стала активной после клика"
 
-    assert driver.find_element(*BUNS_TAB).is_displayed(), "Вкладка 'Булки' не отображается"
-    assert driver.find_element(*SAUCES_TAB).is_displayed(), "Вкладка 'Соусы' не отображается"
-    assert driver.find_element(*FILLINGS_TAB).is_displayed(), "Вкладка 'Начинки' не отображается"
+    def test_fillings_tab_active(self, driver):
+        driver.get(BASE_URL)
+        wait = WebDriverWait(driver, 10)
+        wait.until(EC.element_to_be_clickable(CONSTRUCTOR_LINK)).click()
+
+        # Переходим на вкладку "Начинки"
+        fillings_tab = wait.until(EC.presence_of_element_located(FILLINGS_TAB))
+        fillings_tab.click()
+        fillings_class = fillings_tab.get_attribute("class")
+        assert "active" in fillings_class, "Вкладка 'Начинки' не стала активной после клика"
