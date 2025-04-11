@@ -1,24 +1,51 @@
-import pytest
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from locators import (
-    LOGIN_BUTTON_MAIN,
-    LOGIN_BUTTON_PERSONAL,
+    REGISTRATION_NAME_INPUT,
+    REGISTRATION_EMAIL_INPUT,
+    REGISTRATION_PASSWORD_INPUT,
+    REGISTRATION_BUTTON,
+    PASSWORD_ERROR_MESSAGE,
     ACCOUNT_LINK
 )
-from helpers import login_common
+from helpers import generate_email, generate_password  # Вспомогательные функции для генерации данных
 
 BASE_URL = "http://stellarburgers.com"  # Укажите актуальный URL
 
-class TestLogin:
-    def test_login_from_main_page(self, driver):
-        driver.get(BASE_URL)
-        driver.find_element(*LOGIN_BUTTON_MAIN).click()
-        login_common(driver)
-        account_elements = driver.find_elements(*ACCOUNT_LINK)
-        assert len(account_elements) > 0, "Вход не выполнен через кнопку 'Войти в аккаунт' на главной"
+class TestRegistration:
+    def test_successful_registration(self, driver):
+        """
+        Тест проверяет успешную регистрацию.
+        После регистрации ожидается появление элемента, свидетельствующего
+        об успешном создании аккаунта (например, ссылка на личный кабинет).
+        """
+        driver.get(BASE_URL + "/register")
+        wait = WebDriverWait(driver, 10)
 
-    def test_login_from_personal_cabinet(self, driver):
-        driver.get(BASE_URL)
-        driver.find_element(*LOGIN_BUTTON_PERSONAL).click()
-        login_common(driver)
-        account_elements = driver.find_elements(*ACCOUNT_LINK)
-        assert len(account_elements) > 0, "Вход не выполнен через кнопку 'Личный кабинет'"
+        # Заполнение полей регистрации
+        name_input = wait.until(EC.visibility_of_element_located(REGISTRATION_NAME_INPUT))
+        name_input.send_keys("Test Name")
+
+        email = generate_email(name="test", surname="testov", cohort="1999")
+        email_input = wait.until(EC.visibility_of_element_located(REGISTRATION_EMAIL_INPUT))
+        email_input.send_keys(email)
+
+        password = generate_password(8)
+        password_input = wait.until(EC.visibility_of_element_located(REGISTRATION_PASSWORD_INPUT))
+        password_input.send_keys(password)
+
+        # Клик по кнопке регистрации
+        reg_button = wait.until(EC.element_to_be_clickable(REGISTRATION_BUTTON))
+        reg_button.click()
+
+        # Ожидание появления элемента "Личный кабинет" как признака успешной регистрации
+        account_elem = wait.until(EC.visibility_of_element_located(ACCOUNT_LINK))
+        assert account_elem.is_displayed(), "Элемент 'Личный кабинет' не найден – регистрация не выполнена успешно"
+
+    def test_registration_with_invalid_password(self, driver):
+        """
+        Тест проверяет, что при попытке регистрации с некорректным паролем
+        (менее 6 символов) отображается сообщение об ошибке.
+        """
+        driver.get(BASE_URL + "/register")
+        wait = WebDriverWait(driver,
