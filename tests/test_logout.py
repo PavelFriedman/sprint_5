@@ -1,25 +1,16 @@
+from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from locators import ACCOUNT_LINK, LOGOUT_BUTTON, LOGIN_BUTTON_MAIN
-
-BASE_URL = "http://stellarburgers.com"  # Укажите актуальный URL
+from locators import TestLocators
+from conftest import driver, login
 
 
 class TestLogout:
-    def test_logout(self, driver):
-        """
-        Тест проверяет, что после выполнения процедуры выхода из аккаунта отображается
-        кнопка "Войти в аккаунт", что свидетельствует о корректном выходе пользователя.
-        """
-        driver.get(BASE_URL)
-        wait = WebDriverWait(driver, 10)
-
-        # Переход в раздел "Личный кабинет"
-        wait.until(EC.element_to_be_clickable(ACCOUNT_LINK)).click()
-
-        # Ожидание и клик по кнопке "Выйти"
-        wait.until(EC.element_to_be_clickable(LOGOUT_BUTTON)).click()
-
-        # Ожидание появления кнопки "Войти в аккаунт" как признака успешного выхода
-        login_button = wait.until(EC.visibility_of_element_located(LOGIN_BUTTON_MAIN))
-        assert login_button.is_displayed(), "После выхода кнопка 'Войти в аккаунт' не отображается, выход не выполнен"
+    # вход по кнопке «Войти в аккаунт» на главной
+    def test_logout_of_personal_account_success(self, driver, login):
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(
+            TestLocators.button_make_the_order))
+        driver.find_element(*TestLocators.button_personal_account).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.profile))
+        driver.find_element(*TestLocators.button_logout).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_login))
+        assert driver.find_element(*TestLocators.button_login).is_displayed()

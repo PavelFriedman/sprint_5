@@ -1,46 +1,109 @@
-import time
 import pytest
-from selenium.webdriver.common.by import By
-from locators import (
-    REGISTRATION_NAME_INPUT,
-    REGISTRATION_EMAIL_INPUT,
-    REGISTRATION_PASSWORD_INPUT,
-    REGISTRATION_BUTTON,
-    PASSWORD_ERROR_MESSAGE
-)
-from generators import generate_email, generate_password
-
-BASE_URL = "http://stellarburgers.com"  # Укажите актуальный URL тестового приложения
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
+from locators import TestLocators
+from conftest import driver
+from helpers import create_random_email, create_random_password, create_email_base
+from data import UsersTestData
 
 
-def test_successful_registration(driver):
-    driver.get(f"{BASE_URL}/register")
+class TestRegistration:
+    # Регистрация аккаунта пользователя с валидными значениями инпутов
+    def test_registration_new_account_success_submit(self, driver):
+        random_email = create_random_email()
+        random_password = create_random_password()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys(UsersTestData.username)
+        driver.find_element(*TestLocators.input_email).send_keys(random_email)
+        driver.find_element(*TestLocators.input_password).send_keys(random_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_login))
+        assert driver.find_element(*TestLocators.button_register).is_displayed()
 
-    # Заполняем форму регистрации
-    driver.find_element(*REGISTRATION_NAME_INPUT).send_keys("Test Name")
-    email = generate_email(name="test", surname="testov", cohort="1999")
-    driver.find_element(*REGISTRATION_EMAIL_INPUT).send_keys(email)
-    password = generate_password(8)
-    driver.find_element(*REGISTRATION_PASSWORD_INPUT).send_keys(password)
+    # Регистрация аккаунта при пустом поле "Имя"
+    def test_registration_name_is_empty_failed_submit(self, driver):
+        random_email = create_random_email()
+        random_password = create_random_password()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys('')
+        driver.find_element(*TestLocators.input_email).send_keys(random_email)
+        driver.find_element(*TestLocators.input_password).send_keys(random_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        assert driver.find_element(*TestLocators.button_submit).is_displayed()
 
-    driver.find_element(*REGISTRATION_BUTTON).click()
-    time.sleep(2)  # Лучше использовать WebDriverWait для ожидания элементов
+    # Регистрация аккаунта при вводе невалидного значения в поле Email — отсутствует @
+    def test_registration_invalid_email_format_without_at_failed_submit(self, driver):
+        email_base = create_email_base()
+        random_password = create_random_password()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys(UsersTestData.username)
+        driver.find_element(*TestLocators.input_email).send_keys(f'{email_base}yandex.ru')
+        driver.find_element(*TestLocators.input_password).send_keys(random_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        assert driver.find_element(*TestLocators.button_submit).is_displayed()
 
-    # Проверяем наличие ссылки в личном кабинете как сигнал об успешной регистрации
-    account_elements = driver.find_elements(By.XPATH, "//a[contains(@href, '/account')]")
-    assert len(account_elements) > 0, "Личный кабинет не найден — регистрация, возможно, не прошла успешно"
+    # Регистрация аккаунта при вводе невалидного значения в поле Email — отсутствует домен первого уровня
+    def test_registration_invalid_mail_format_with_invalid_domain_failed_submit(self, driver):
+        email_base = create_email_base()
+        random_password = create_random_password()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys(UsersTestData.username)
+        driver.find_element(*TestLocators.input_email).send_keys(f'{email_base}@ya.')
+        driver.find_element(*TestLocators.input_password).send_keys(random_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        assert driver.find_element(*TestLocators.button_submit).is_displayed()
 
+    # Регистрация аккаунта при вводе валидного по длине значения в поле "Пароль"
+    @pytest.mark.parametrize('valid_password', ['123456', '1234567', '123456789012'])
+    def test_registration_valid_length_password_success_submit(self, driver, valid_password):
+        random_email = create_random_email()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys(UsersTestData.username)
+        driver.find_element(*TestLocators.input_email).send_keys(random_email)
+        driver.find_element(*TestLocators.input_password).send_keys(valid_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_login))
+        assert driver.find_element(*TestLocators.button_register).is_displayed()
 
-def test_registration_with_invalid_password(driver):
-    driver.get(f"{BASE_URL}/register")
+    # Регистрация аккаунта при вводе НЕвалидного по длине значения в поле "Пароль"
+    @pytest.mark.parametrize('wrong_password', ['12345', '1234', '1', ''])
+    def test_registration_invalid_length_password_failed_submit(self, driver, wrong_password):
+        random_email = create_random_email()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys(UsersTestData.username)
+        driver.find_element(*TestLocators.input_email).send_keys(random_email)
+        driver.find_element(*TestLocators.input_password).send_keys(wrong_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        assert driver.find_element(*TestLocators.button_submit).is_displayed()
 
-    driver.find_element(*REGISTRATION_NAME_INPUT).send_keys("Test Name")
-    email = generate_email(name="test", surname="testov", cohort="1999")
-    driver.find_element(*REGISTRATION_EMAIL_INPUT).send_keys(email)
-    driver.find_element(*REGISTRATION_PASSWORD_INPUT).send_keys("123")  # Некорректный пароль
-
-    driver.find_element(*REGISTRATION_BUTTON).click()
-    time.sleep(2)
-
-    error_element = driver.find_element(*PASSWORD_ERROR_MESSAGE)
-    assert error_element.is_displayed(), "Сообщение об ошибке не отображается при некорректном пароле"
+    # Проверка появления подсказки при вводе НЕвалидного по длине значения в поле "Пароль"
+    @pytest.mark.parametrize('wrong_password', ['12345', '1234', '1',])
+    def test_registration_invalid_length_password_notification_incorrect_password(self, driver, wrong_password):
+        random_email = create_random_email()
+        driver.find_element(*TestLocators.button_login_in_main).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_register))
+        driver.find_element(*TestLocators.button_register).click()
+        WebDriverWait(driver, 6).until(expected_conditions.visibility_of_element_located(TestLocators.button_submit))
+        driver.find_element(*TestLocators.input_name).send_keys(UsersTestData.username)
+        driver.find_element(*TestLocators.input_email).send_keys(random_email)
+        driver.find_element(*TestLocators.input_password).send_keys(wrong_password)
+        driver.find_element(*TestLocators.button_submit).click()
+        assert driver.find_element(*TestLocators.notification_incorrect_password).text == 'Некорректный пароль'

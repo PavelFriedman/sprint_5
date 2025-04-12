@@ -1,53 +1,81 @@
 from selenium.webdriver.common.by import By
 
-# =================== Регистрация ===================
-REGISTRATION_NAME_INPUT = (By.XPATH, "//input[@name='name']")
-# Поле для ввода имени при регистрации
 
-REGISTRATION_EMAIL_INPUT = (By.XPATH, "//input[@name='email']")
-# Поле для ввода email при регистрации
+class TestLocators:
+    # Регистрация аккаунта
+    # Поле "Имя"
+    input_name = By.XPATH, '//label[text()="Имя"]/following-sibling::input'
 
-REGISTRATION_PASSWORD_INPUT = (By.XPATH, "//input[@name='password']")
-# Поле для ввода пароля при регистрации
+    # Поле Email
+    input_email = By.XPATH, './/label[text()="Email"]/following-sibling::input'
 
-REGISTRATION_BUTTON = (By.XPATH, "//button[text()='Зарегистрироваться']")
-# Кнопка "Зарегистрироваться"
+    # Поле "Пароль"
+    input_password = By.XPATH, './/input[@name="Пароль"]'
 
-PASSWORD_ERROR_MESSAGE = (By.XPATH, "//p[contains(text(), 'Некорректный пароль')]")
-# Сообщение об ошибке при некорректном пароле
+    # Кнопка "Зарегистрироваться"
+    button_submit = By.XPATH, '//button[text() = "Зарегистрироваться"]'
 
-# =================== Вход ===================
-LOGIN_BUTTON_MAIN = (By.XPATH, "//button[text()='Войти в аккаунт']")
-# Кнопка "Войти в аккаунт" на главной странице
+    # Сообщение об ошибке: пароль не прошел валидацию
+    notification_incorrect_password = By.XPATH, '//p[text() = "Некорректный пароль"]'
 
-LOGIN_EMAIL_INPUT = (By.XPATH, "//input[@name='email']")
-# Поле ввода email в форме входа
+    # Кнопка "Войти" на форме регистрации
+    button_login_in_registration_form = By.XPATH, '//a[text() = "Войти"]'
 
-LOGIN_PASSWORD_INPUT = (By.XPATH, "//input[@name='password']")
-# Поле ввода пароля в форме входа
+    # Аутентификация
+    # Поле Email
+    input_email_auth = By.XPATH, '//label[text()="Email"]/following-sibling::input'
 
-LOGIN_BUTTON_PERSONAL = (By.XPATH, "//a[contains(@href, '/account')]")
-# Ссылка или кнопка, ведущая к форме входа (например, "Личный кабинет")
+    # Поле "Пароль"
+    input_password_auth = By.XPATH, '//input[@name = "Пароль"]'
 
-ACCOUNT_LINK = (By.XPATH, "//a[contains(@href, '/account')]")
-# Элемент "Личный кабинет", появляющийся после успешного входа
+    # Кнопка "Войти"
+    button_login = By.XPATH, '//button[text()="Войти"]'
 
-# =================== Раздел "Конструктор" ===================
-CONSTRUCTOR_LINK = (By.XPATH, "//a[text()='Конструктор']")
-# Ссылка "Конструктор"
+    # Кнопка "Зарегистрироваться"
+    button_register = By.XPATH, '//a[text() = "Зарегистрироваться"]'
 
-LOGO_LINK = (By.XPATH, "//a[contains(@class, 'AppHeader_header__logo')]")
-# Логотип, ведущий на главную страницу
+    # Восстановление пароля
+    # Кнопка "Восстановить пароль"
+    button_forgot_password = By.XPATH, '//a[text() = "Восстановить пароль"]'
 
-BUNS_TAB = (By.XPATH, "//span[text()='Булки']")
-# Вкладка "Булки"
+    # Кнопка "Войти" в форме восстановления пароля
+    button_login_passwd_recovery_form = By.XPATH, '//a[text() = "Войти"]'
 
-SAUCES_TAB = (By.XPATH, "//span[text()='Соусы']")
-# Вкладка "Соусы"
+    # Личный кабинет
+    # Раздел "Профиль"
+    profile = By.XPATH, '//a[@href = "/account/profile"]'
 
-FILLINGS_TAB = (By.XPATH, "//span[text()='Начинки']")
-# Вкладка "Начинки"
+    # Раздел "История заказов"
+    order_history = By.XPATH, '//a[@href = "/account/order-history"]'
 
-# =================== Выход ===================
-LOGOUT_BUTTON = (By.XPATH, "//button[text()='Выйти']")
-# Кнопка "Выйти" в личном кабинете
+    # Кнопка "Выйти", логаут
+    button_logout = By.XPATH, '//button[@type = "button"]'
+
+    # Главная
+    # Кнопка "Войти в аккаунт" на главной
+    button_login_in_main = By.XPATH, './/button[text() = "Войти в аккаунт"]'
+
+    # Кнопка "Личный кабинет"
+    button_personal_account = By.XPATH, '//p[text() = "Личный Кабинет"]'
+
+    # Кнопка "Оформить заказ"
+    button_make_the_order = By.XPATH, '//button[text()="Оформить заказ"]'
+
+    # Кнопка "Конструктор" в шапке сайта
+    header_of_page_constructor = By.XPATH, '//p[text() = "Конструктор"]'
+
+    # Селектор, помечающий выбранный раздел конструктора как активный
+    selected_button = By.XPATH, ('//div[@class = '
+                                 '"tab_tab__1SPyG tab_tab_type_current__2BEPc pt-4 pr-10 pb-4 pl-10 noselect"]')
+
+    # Заголовок раздела "Булки" в меню конструктора
+    buns_block = By.XPATH, '//span[text() = "Булки"]'
+
+    # Заголовок раздела "Соусы" в меню конструктора
+    sauces_block = By.XPATH, '//span[text() = "Соусы"]'
+
+    # Заголовок раздела "Начинки" в меню конструктора
+    fillings_block = By.XPATH, '//span[text() = "Начинки"]'
+
+    # Кликабельный логотип в шапке сайта
+    logo = By.XPATH, '//div[@class="AppHeader_header__logo__2D0X2"]'
